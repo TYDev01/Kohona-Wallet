@@ -7,7 +7,7 @@ import { useBalance } from "@/hooks/useBalance";
 
 export function Overview() {
   const { currentAddress, currentChainId } = useWallet();
-  const { data: balance, isLoading } = useBalance(currentAddress, currentChainId);
+  const { data: balance, isLoading, isError, refetch } = useBalance(currentAddress, currentChainId);
 
   if (!currentAddress) return null;
 
@@ -21,7 +21,13 @@ export function Overview() {
       </div>
 
       <div className="mt-2">
-        <BalanceDisplay balance={balance} isLoading={isLoading} size="lg" />
+        <BalanceDisplay
+          balance={balance}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={refetch}
+          size="lg"
+        />
       </div>
     </div>
   );

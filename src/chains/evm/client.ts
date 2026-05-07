@@ -8,11 +8,13 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { NETWORKS } from "./networks";
 
-const publicClientCache = new Map<number, PublicClient>();
+const publicClientCache = new Map<string, PublicClient>();
 
-function chainConfig(chainId: number) {
-  const net = NETWORKS[chainId];
-  if (!net) throw new Error(`Unknown chainId: ${chainId}`);
+function cacheKey(chainId: number, rpcUrl: string) {
+  return `${chainId}::${rpcUrl}`;
+}
+
+function chainConfig(net: ReturnType<typeof getNetwork>) {
   return {
     id: net.chainId,
     name: net.name,
@@ -21,26 +23,31 @@ function chainConfig(chainId: number) {
   } as const;
 }
 
-export function getPublicClient(chainId: number): PublicClient {
-  if (publicClientCache.has(chainId)) {
-    return publicClientCache.get(chainId)!;
-  }
+function getNetwork(chainId: number) {
   const net = NETWORKS[chainId];
   if (!net) throw new Error(`Unknown chainId: ${chainId}`);
+  return net;
+}
+
+export function getPublicClient(chainId: number): PublicClient {
+  const net = getNetwork(chainId);
+  const key = cacheKey(chainId, net.rpcUrl);
+  if (publicClientCache.has(key)) return publicClientCache.get(key)!;
   const client = createPublicClient({
-    chain: chainConfig(chainId),
+    chain: chainConfig(net),
     transport: http(net.rpcUrl),
   });
-  publicClientCache.set(chainId, client);
+  publicClientCache.set(key, client);
   return client;
 }
 
 export function getWalletClient(privateKey: `0x${string}`, chainId: number): WalletClient {
+  const net = getNetwork(chainId);
   const account = privateKeyToAccount(privateKey);
   return createWalletClient({
     account,
-    chain: chainConfig(chainId),
-    transport: http(NETWORKS[chainId].rpcUrl),
+    chain: chainConfig(net),
+    transport: http(net.rpcUrl),
   });
 }
 

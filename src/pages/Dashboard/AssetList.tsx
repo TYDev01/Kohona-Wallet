@@ -7,7 +7,7 @@ import { useBalance } from "@/hooks/useBalance";
 
 export function AssetList() {
   const { currentAddress, currentChainId, currentNetwork } = useWallet();
-  const { data: balance, isLoading } = useBalance(currentAddress, currentChainId);
+  const { data: balance, isLoading, isError, refetch } = useBalance(currentAddress, currentChainId);
 
   return (
     <div className="px-4 pb-4">
@@ -24,7 +24,7 @@ export function AssetList() {
               <p className="font-medium">{currentNetwork.nativeCurrency.name}</p>
               <p className="text-xs text-muted-foreground">{currentNetwork.nativeCurrency.symbol}</p>
             </div>
-            <BalanceDisplay balance={balance} isLoading={isLoading} size="sm" />
+            <BalanceDisplay balance={balance} isLoading={isLoading} isError={isError} onRetry={refetch} size="sm" />
           </div>
           <Separator />
           <div className="flex items-center justify-center p-4 text-xs text-muted-foreground">
