@@ -1,17 +1,23 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Wallet } from "lucide-react";
+import { useNavigate, Routes, Route, Navigate } from "react-router-dom";
+import { Wallet, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateWallet } from "./CreateWallet";
 import { ConfirmSeed } from "./ConfirmSeed";
 import { SetPassword } from "./SetPassword";
+import ImportChoice from "./Import";
+import SeedPhraseImport from "./Import/SeedPhrase";
+import PrivateKeyImport from "./Import/PrivateKey";
+import KeystoreImport from "./Import/Keystore";
 
-type Step = "welcome" | "create" | "confirm" | "password";
+// ─── Create-wallet sub-flow (step state, no sub-routes) ─────────────────────
 
-export default function Onboarding() {
-  const [step, setStep] = useState<Step>("welcome");
-  const [mnemonic, setMnemonic] = useState("");
+type CreateStep = "create" | "confirm" | "password";
+
+function CreateFlow({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate();
+  const [step, setStep] = useState<CreateStep>("create");
+  const [mnemonic, setMnemonic] = useState("");
 
   if (step === "create") {
     return (
@@ -23,7 +29,6 @@ export default function Onboarding() {
       />
     );
   }
-
   if (step === "confirm") {
     return (
       <ConfirmSeed
@@ -33,15 +38,23 @@ export default function Onboarding() {
       />
     );
   }
+  return (
+    <SetPassword
+      mnemonic={mnemonic}
+      onBack={() => setStep("confirm")}
+      onDone={onDone}
+    />
+  );
+}
 
-  if (step === "password") {
-    return (
-      <SetPassword
-        mnemonic={mnemonic}
-        onBack={() => setStep("confirm")}
-        onDone={() => navigate("/")}
-      />
-    );
+// ─── Landing page ────────────────────────────────────────────────────────────
+
+function OnboardingLanding() {
+  const navigate = useNavigate();
+  const [showCreate, setShowCreate] = useState(false);
+
+  if (showCreate) {
+    return <CreateFlow onDone={() => navigate("/")} />;
   }
 
   return (
@@ -57,10 +70,34 @@ export default function Onboarding() {
       </div>
 
       <div className="flex flex-col gap-3 w-full max-w-xs">
-        <Button size="lg" className="w-full" onClick={() => setStep("create")}>
+        <Button size="lg" className="w-full" onClick={() => setShowCreate(true)}>
           Create New Wallet
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => navigate("/onboarding/import")}
+        >
+          <Download className="h-4 w-4" />
+          Import Existing Wallet
         </Button>
       </div>
     </div>
+  );
+}
+
+// ─── Root export: handles /onboarding/* sub-routes ───────────────────────────
+
+export default function Onboarding() {
+  return (
+    <Routes>
+      <Route index element={<OnboardingLanding />} />
+      <Route path="import" element={<ImportChoice />} />
+      <Route path="import/seed-phrase" element={<SeedPhraseImport />} />
+      <Route path="import/private-key" element={<PrivateKeyImport />} />
+      <Route path="import/keystore" element={<KeystoreImport />} />
+      <Route path="*" element={<Navigate to="/onboarding" replace />} />
+    </Routes>
   );
 }

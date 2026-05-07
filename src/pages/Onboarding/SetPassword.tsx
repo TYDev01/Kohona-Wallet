@@ -5,15 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { keyring } from "@/keyring/keyring";
+import type { AccountEntry } from "@/keyring/keyring";
 import { useWalletStore } from "@/store/walletStore";
 
 interface SetPasswordProps {
-  mnemonic: string;
+  /** For the create-new-wallet flow: pass the mnemonic. */
+  mnemonic?: string;
+  /**
+   * For import flows: provide a custom async function that receives the
+   * password and returns the created accounts.  Overrides `mnemonic`.
+   */
+  onCreate?: (password: string) => Promise<AccountEntry[]>;
   onBack: () => void;
   onDone: () => void;
 }
 
-export function SetPassword({ mnemonic, onBack, onDone }: SetPasswordProps) {
+export function SetPassword({ mnemonic, onCreate, onBack, onDone }: SetPasswordProps) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -27,13 +34,20 @@ export function SetPassword({ mnemonic, onBack, onDone }: SetPasswordProps) {
     if (!isValid) return;
     setLoading(true);
     try {
-      const accounts = await keyring.create(mnemonic, password);
+      let accounts: AccountEntry[];
+      if (onCreate) {
+        accounts = await onCreate(password);
+      } else if (mnemonic) {
+        accounts = await keyring.create(mnemonic, password);
+      } else {
+        throw new Error("No mnemonic or onCreate provided");
+      }
       setAccounts(accounts);
       setStatus("unlocked");
       toast.success("Wallet created successfully!");
       onDone();
     } catch (err) {
-      toast.error("Failed to create wallet. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to create wallet");
       console.error(err);
     } finally {
       setLoading(false);

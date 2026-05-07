@@ -49,7 +49,8 @@ function AppRoutes() {
   if (status === "uninitialized") {
     return (
       <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
+        {/* Onboarding owns /onboarding/* including all import sub-routes */}
+        <Route path="/onboarding/*" element={<Onboarding />} />
         <Route path="*" element={<Navigate to="/onboarding" replace />} />
       </Routes>
     );
