@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { keyring } from "@/keyring/keyring";
 import { useWalletStore } from "@/store/walletStore";
@@ -15,7 +16,7 @@ export default function Unlock() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const setAccounts = useWalletStore((s) => s.setAccounts);
-  const setStatus = useWalletStore((s) => s.setStatus);
+  const setStatus = useWalletStore((s) => s.setStatus); // needed after successful unlock
 
   const handleUnlock = async () => {
     if (!password) return;
@@ -32,6 +33,10 @@ export default function Unlock() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImport = () => {
+    navigate("/onboarding/import");
   };
 
   return (
@@ -81,6 +86,22 @@ export default function Unlock() {
           disabled={!password || loading}
         >
           {loading ? "Unlocking…" : "Unlock"}
+        </Button>
+
+        <div className="flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <Separator className="flex-1" />
+        </div>
+
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full gap-2"
+          onClick={handleImport}
+        >
+          <Download className="h-4 w-4" />
+          Import a Different Wallet
         </Button>
       </div>
     </div>

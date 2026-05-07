@@ -60,6 +60,8 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/unlock" element={<Unlock />} />
+        {/* Allow import flows even when locked so the user can replace the wallet */}
+        <Route path="/onboarding/*" element={<Onboarding />} />
         <Route path="*" element={<Navigate to="/unlock" replace />} />
       </Routes>
     );

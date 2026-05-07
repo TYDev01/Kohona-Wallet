@@ -243,6 +243,19 @@ export class Keyring {
     await this.save(data, newPassword);
     this.currentPassword = newPassword;
   }
+
+  // ─── Verify password without changing state ──────────────────────────────────
+
+  async verifyPassword(password: string): Promise<boolean> {
+    try {
+      const stored = await this.load();
+      if (!stored) return false;
+      await decrypt(stored.blob, password);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export const keyring = new Keyring();
